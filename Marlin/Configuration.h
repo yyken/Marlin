@@ -59,7 +59,7 @@
 #define DELTA_SEGMENTS_PER_SECOND 200
 
 // Center-to-center distance of the holes in the diagonal push rods.
-#define DELTA_DIAGONAL_ROD 250.0 // mm
+#define DELTA_DIAGONAL_ROD 240.0 // mm
 
 // Horizontal offset from middle of printer to smooth rod center.
 #define DELTA_SMOOTH_ROD_OFFSET 175.0 // mm
@@ -305,17 +305,17 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 
 // default settings 
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {114, 114, 114, 200}
-#define DEFAULT_MAX_FEEDRATE          {400, 400, 400, 400}  // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {9000, 9000, 9000, 9000}    // X, Y, Z, E maximum start speed for accelerated moves.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {113, 113, 113, 1220}
+#define DEFAULT_MAX_FEEDRATE          {300, 300, 300, 300}  // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {1000, 1000, 1000, 1000}    // X, Y, Z, E maximum start speed for accelerated moves.
 
-#define DEFAULT_ACCELERATION          9000   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  9000   // X, Y, Z and E max acceleration in mm/s^2 for r retracts
+#define DEFAULT_ACCELERATION          1000   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  1000   // X, Y, Z and E max acceleration in mm/s^2 for r retracts
 
 // 
-#define DEFAULT_XYJERK                100.0   // (mm/sec)
-#define DEFAULT_ZJERK                 100.0   // (mm/sec)
-#define DEFAULT_EJERK                 100.0   // (mm/sec)
+#define DEFAULT_XYJERK                30.0   // (mm/sec)
+#define DEFAULT_ZJERK                 30.0   // (mm/sec)
+#define DEFAULT_EJERK                 30.0   // (mm/sec)
 
 //===========================================================================
 //=============================Additional Features===========================
