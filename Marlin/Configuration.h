@@ -46,7 +46,7 @@
 // 301 = Rambo
 
 #ifndef MOTHERBOARD
-#define MOTHERBOARD 82
+#define MOTHERBOARD 81
 #endif
 
 //===========================================================================
@@ -305,17 +305,17 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 
 // default settings 
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {111.3, 111.3, 111.3, 1620}
-#define DEFAULT_MAX_FEEDRATE          {300, 300, 300, 300}  // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1000, 1000, 1000, 1000}    // X, Y, Z, E maximum start speed for accelerated moves.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {55.55, 55.55, 55.55, 810}
+#define DEFAULT_MAX_FEEDRATE          {300, 300, 300, 20}  // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {400, 400, 400, 400}    // X, Y, Z, E maximum start speed for accelerated moves.
 
-#define DEFAULT_ACCELERATION          1000   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  1000   // X, Y, Z and E max acceleration in mm/s^2 for r retracts
+#define DEFAULT_ACCELERATION          400   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  400   // X, Y, Z and E max acceleration in mm/s^2 for r retracts
 
 // 
-#define DEFAULT_XYJERK                30.0   // (mm/sec)
-#define DEFAULT_ZJERK                 30.0   // (mm/sec)
-#define DEFAULT_EJERK                 30.0   // (mm/sec)
+#define DEFAULT_XYJERK                20.0   // (mm/sec)
+#define DEFAULT_ZJERK                 20.0   // (mm/sec)
+#define DEFAULT_EJERK                 10.0   // (mm/sec)
 
 //===========================================================================
 //=============================Additional Features===========================
