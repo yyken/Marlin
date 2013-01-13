@@ -46,7 +46,7 @@
 // 301 = Rambo
 
 #ifndef MOTHERBOARD
-#define MOTHERBOARD 81
+#define MOTHERBOARD 82
 #endif
 
 //===========================================================================
@@ -306,7 +306,7 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 // default settings 
 
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {55.55, 55.55, 55.55, 810}
-#define DEFAULT_MAX_FEEDRATE          {300, 300, 300, 20}  // (mm/sec)
+#define DEFAULT_MAX_FEEDRATE          {400, 400, 400, 20}  // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {400, 400, 400, 400}    // X, Y, Z, E maximum start speed for accelerated moves.
 
 #define DEFAULT_ACCELERATION          400   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
