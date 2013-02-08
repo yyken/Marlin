@@ -305,8 +305,8 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 
 // default settings 
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {55.55, 55.55, 55.55, 810}
-#define DEFAULT_MAX_FEEDRATE          {400, 400, 400, 20}  // (mm/sec)
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {111, 111, 111, 1620}
+#define DEFAULT_MAX_FEEDRATE          {200, 200, 200, 12}  // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {400, 400, 400, 400}    // X, Y, Z, E maximum start speed for accelerated moves.
 
 #define DEFAULT_ACCELERATION          400   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
@@ -315,7 +315,7 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 // 
 #define DEFAULT_XYJERK                20.0   // (mm/sec)
 #define DEFAULT_ZJERK                 20.0   // (mm/sec)
-#define DEFAULT_EJERK                 10.0   // (mm/sec)
+#define DEFAULT_EJERK                 12.0   // (mm/sec)
 
 //===========================================================================
 //=============================Additional Features===========================
