@@ -59,6 +59,7 @@
 // G10 - retract filament according to settings of M207
 // G11 - retract recover filament according to settings of M208
 // G28 - Home all Axis
+// G29 - Calibrate print surface with automatic Z probe
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to cordinates given
@@ -170,6 +171,7 @@ const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 static float delta[3] = {0.0, 0.0, 0.0};
 static float offset[3] = {0.0, 0.0, 0.0};
+static float bed_level[7][7];
 static bool home_all_axis = true;
 static float feedrate = 1500.0, next_feedrate, saved_feedrate;
 static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
@@ -642,6 +644,96 @@ static void homeaxis(int axis) {
 }
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
 
+void deploy_z_probe() {
+  feedrate = 200*60;
+  destination[X_AXIS] = 25;
+  destination[Y_AXIS] = 93;
+  destination[Z_AXIS] = 100;
+  prepare_move();
+
+  feedrate = 20*60;
+  destination[X_AXIS] = 0;
+  prepare_move();
+  st_synchronize();
+}
+
+void retract_z_probe() {
+  feedrate = 200*60;
+  destination[X_AXIS] = -40;
+  destination[Y_AXIS] = -82;
+  destination[Z_AXIS] = 10;
+  prepare_move();
+
+  feedrate = 20*60;
+  destination[Z_AXIS] = -5;
+  // Can't use prepare_move() here because it would call
+  // clamp_to_software_endstops() which would not let us move lower
+  // than 0.
+  calculate_delta(destination);
+  plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+                   destination[E_AXIS], feedrate*feedmultiply/60/100.0,
+                   active_extruder);
+
+  feedrate = 200*60;
+  destination[Z_AXIS] = 10;
+  prepare_move();
+  destination[Z_AXIS] = 11;
+  prepare_move();
+  st_synchronize();
+}
+
+float z_probe() {
+  feedrate = 400*60;
+  destination[Z_AXIS] = 10;
+  prepare_move();
+  st_synchronize();
+
+  enable_endstops(true);
+  long start_steps = st_get_position(Z_AXIS);
+
+  feedrate = 50*60;
+  destination[Z_AXIS] = 0;
+  prepare_move();
+  st_synchronize();
+  endstops_hit_on_purpose();
+
+  enable_endstops(false);
+  long stop_steps = st_get_position(Z_AXIS);
+
+  float mm = 10.0 - float(start_steps - stop_steps)
+    / axis_steps_per_unit[Z_AXIS];
+  current_position[Z_AXIS] = mm;
+  calculate_delta(current_position);
+  plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+		    current_position[E_AXIS]);
+
+  feedrate = 200*60;
+  destination[Z_AXIS] = 10;
+  prepare_move();
+  st_synchronize();
+  return mm;
+}
+
+void calibrate_print_surface() {
+  for (int y = 3; y >= -3; y--) {
+    int dir = y % 2 ? 1 : -1;
+    for (int x = -3*dir; x != 4*dir; x += dir) {
+      if (x*x + y*y < 11) {
+	destination[X_AXIS] = 25 * x;
+	destination[Y_AXIS] = 25 * y - Z_PROBE_OFFSET;
+	bed_level[x+3][y+3] = z_probe();
+      } else {
+        bed_level[x+3][y+3] = 0.0;
+      }
+    }
+    for (int x = -3; x <= 3; x++) {
+      SERIAL_PROTOCOL_F(bed_level[x+3][y+3], 3);
+      SERIAL_PROTOCOLPGM(" ");
+    }
+    SERIAL_ECHOLN("");
+  }
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -792,6 +884,20 @@ void process_commands()
         enable_endstops(false);
       #endif
       
+      feedrate = saved_feedrate;
+      feedmultiply = saved_feedmultiply;
+      previous_millis_cmd = millis();
+      endstops_hit_on_purpose();
+      break;
+    case 29: // G29 Calibrate print surface with automatic Z probe.
+      saved_feedrate = feedrate;
+      saved_feedmultiply = feedmultiply;
+      feedmultiply = 100;
+
+      deploy_z_probe();
+      calibrate_print_surface();
+      retract_z_probe();
+
       feedrate = saved_feedrate;
       feedmultiply = saved_feedmultiply;
       previous_millis_cmd = millis();

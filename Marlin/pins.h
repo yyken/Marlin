@@ -965,7 +965,8 @@
 #else  // Printrboard
   #define X_STOP_PIN         35
   #define Y_STOP_PIN          8
-  #define Z_STOP_PIN         36
+  #define Z_MAX_PIN          36
+  #define Z_MIN_PIN          37  // Use E-STOP pin for bed leveling probe.
   #define TEMP_0_PIN          1  // Extruder / Analog pin numbering
   #define TEMP_BED_PIN        0  // Bed / Analog pin numbering
 #endif

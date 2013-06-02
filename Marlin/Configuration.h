@@ -107,7 +107,7 @@
 // 52 is 200k thermistor - ATC Semitec 204GT-2 (1k pullup)
 // 55 is 100k thermistor - ATC Semitec 104GT-2 (Used in ParCan) (1k pullup)
 
-#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_0 0
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_BED 0
@@ -297,11 +297,13 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 // For deltabots this means top and center of the cartesian print volume.
 #define MANUAL_X_HOME_POS 0
 #define MANUAL_Y_HOME_POS 0
-#define MANUAL_Z_HOME_POS 255  // Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS 250  // Distance between nozzle and print surface after homing.
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #define HOMING_FEEDRATE {200*60, 200*60, 200*60, 0}  // set the homing speeds (mm/min)
+
+#define Z_PROBE_OFFSET 13.6  // Distance between hotend nozzle and bed leveling probe.
 
 // default settings 
 
