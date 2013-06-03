@@ -146,6 +146,7 @@
 CardReader card;
 #endif
 float homing_feedrate[] = HOMING_FEEDRATE;
+float z_probe_offset[] = Z_PROBE_OFFSET;
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
 int saved_feedmultiply;
@@ -624,13 +625,15 @@ static void homeaxis(int axis) {
     feedrate = homing_feedrate[axis];
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
-   
+
+    enable_endstops(false);  // Ignore Z probe while moving away from the top microswitch.
     current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = -home_retract_mm(axis) * home_dir(axis);
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
-   
+    enable_endstops(true);  // Stop ignoring Z probe while moving up to the top microswitch again.
+
     destination[axis] = 2*home_retract_mm(axis) * home_dir(axis);
     feedrate = homing_feedrate[axis]/2 ; 
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
@@ -645,7 +648,7 @@ static void homeaxis(int axis) {
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
 
 void deploy_z_probe() {
-  feedrate = 200*60;
+  feedrate = 400*60;
   destination[X_AXIS] = 25;
   destination[Y_AXIS] = 93;
   destination[Z_AXIS] = 100;
@@ -658,7 +661,7 @@ void deploy_z_probe() {
 }
 
 void retract_z_probe() {
-  feedrate = 200*60;
+  feedrate = 400*60;
   destination[X_AXIS] = -40;
   destination[Y_AXIS] = -82;
   destination[Z_AXIS] = 10;
@@ -674,10 +677,11 @@ void retract_z_probe() {
                    destination[E_AXIS], feedrate*feedmultiply/60/100.0,
                    active_extruder);
 
-  feedrate = 200*60;
+  feedrate = 400*60;
   destination[Z_AXIS] = 10;
   prepare_move();
-  destination[Z_AXIS] = 11;
+  // Try again because sometimes the last move doesn't flush properly.
+  destination[Z_AXIS] = 10.1;
   prepare_move();
   st_synchronize();
 }
@@ -707,10 +711,9 @@ float z_probe() {
   plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
 		    current_position[E_AXIS]);
 
-  feedrate = 200*60;
+  feedrate = 400*60;
   destination[Z_AXIS] = 10;
   prepare_move();
-  st_synchronize();
   return mm;
 }
 
@@ -719,9 +722,9 @@ void calibrate_print_surface() {
     int dir = y % 2 ? 1 : -1;
     for (int x = -3*dir; x != 4*dir; x += dir) {
       if (x*x + y*y < 11) {
-	destination[X_AXIS] = 25 * x;
-	destination[Y_AXIS] = 25 * y - Z_PROBE_OFFSET;
-	bed_level[x+3][y+3] = z_probe();
+	destination[X_AXIS] = 25 * x - z_probe_offset[X_AXIS];
+	destination[Y_AXIS] = 25 * y - z_probe_offset[Y_AXIS];
+	bed_level[x+3][y+3] = z_probe() - z_probe_offset[Z_AXIS];
       } else {
         bed_level[x+3][y+3] = 0.0;
       }

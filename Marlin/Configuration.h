@@ -301,23 +301,23 @@ const bool Z_ENDSTOPS_INVERTING = false; // set to true to invert the logic of t
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#define HOMING_FEEDRATE {200*60, 200*60, 200*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {320*60, 320*60, 320*60, 0}  // set the homing speeds (mm/min)
 
-#define Z_PROBE_OFFSET 13.6  // Distance between hotend nozzle and bed leveling probe.
+#define Z_PROBE_OFFSET {0, 13.6, 7, 0}  // Distance between hotend nozzle and bed leveling probe.
 
 // default settings 
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100, 100, 100, 1620}
-#define DEFAULT_MAX_FEEDRATE          {200, 200, 200, 12}  // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1000, 1000, 1000, 1000}    // X, Y, Z, E maximum start speed for accelerated moves.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {100, 100, 100, 1250}
+#define DEFAULT_MAX_FEEDRATE          {320, 320, 320, 25}  // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {2000, 2000, 2000, 2000}    // X, Y, Z, E maximum start speed for accelerated moves.
 
-#define DEFAULT_ACCELERATION          1000   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  1000   // X, Y, Z and E max acceleration in mm/s^2 for r retracts
+#define DEFAULT_ACCELERATION          2000   // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  2000   // X, Y, Z and E max acceleration in mm/s^2 for r retracts
 
 // 
 #define DEFAULT_XYJERK                20.0   // (mm/sec)
 #define DEFAULT_ZJERK                 20.0   // (mm/sec)
-#define DEFAULT_EJERK                 12.0   // (mm/sec)
+#define DEFAULT_EJERK                 20.0   // (mm/sec)
 
 //===========================================================================
 //=============================Additional Features===========================
