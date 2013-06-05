@@ -158,6 +158,8 @@ void ClearToSend();
 
 void get_coordinates();
 void calculate_delta(float cartesian[3]);
+void adjust_delta(float cartesian[3]);
+void prepare_move_raw();
 void prepare_move();
 void kill();
 void Stop();

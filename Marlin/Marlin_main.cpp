@@ -660,11 +660,11 @@ void deploy_z_probe() {
   destination[X_AXIS] = 25;
   destination[Y_AXIS] = 93;
   destination[Z_AXIS] = 100;
-  prepare_move();
+  prepare_move_raw();
 
   feedrate = 20*60;
   destination[X_AXIS] = 0;
-  prepare_move();
+  prepare_move_raw();
   st_synchronize();
 }
 
@@ -673,31 +673,25 @@ void retract_z_probe() {
   destination[X_AXIS] = -40;
   destination[Y_AXIS] = -82;
   destination[Z_AXIS] = 10;
-  prepare_move();
+  prepare_move_raw();
 
   feedrate = 20*60;
   destination[Z_AXIS] = -5;
-  // Can't use prepare_move() here because it would call
-  // clamp_to_software_endstops() which would not let us move lower
-  // than 0.
-  calculate_delta(destination);
-  plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
-                   destination[E_AXIS], feedrate*feedmultiply/60/100.0,
-                   active_extruder);
+  prepare_move_raw();
 
   feedrate = 400*60;
   destination[Z_AXIS] = 10;
-  prepare_move();
+  prepare_move_raw();
   // Try again because sometimes the last move doesn't flush properly.
   destination[Z_AXIS] = 10.1;
-  prepare_move();
+  prepare_move_raw();
   st_synchronize();
 }
 
 float z_probe() {
   feedrate = 400*60;
   destination[Z_AXIS] = 10;
-  prepare_move();
+  prepare_move_raw();
   st_synchronize();
 
   enable_endstops(true);
@@ -705,7 +699,7 @@ float z_probe() {
 
   feedrate = 50*60;
   destination[Z_AXIS] = 0;
-  prepare_move();
+  prepare_move_raw();
   st_synchronize();
   endstops_hit_on_purpose();
 
@@ -721,7 +715,7 @@ float z_probe() {
 
   feedrate = 400*60;
   destination[Z_AXIS] = 10;
-  prepare_move();
+  prepare_move_raw();
   return mm;
 }
 
@@ -1799,35 +1793,56 @@ void clamp_to_software_endstops(float target[3])
 
 void calculate_delta(float cartesian[3])
 {
-  int grid_x = max(0, min(7, int(cartesian[X_AXIS]/25.0 + 3.5)));
-  int grid_y = max(0, min(7, int(cartesian[Y_AXIS]/25.0 + 3.5)));
-  float adjusted_z = cartesian[Z_AXIS] + bed_level[grid_x][grid_y];
   delta[X_AXIS] = sqrt(sq(DELTA_DIAGONAL_ROD)
                        - sq(DELTA_TOWER1_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER1_Y-cartesian[Y_AXIS])
-                       ) + adjusted_z;
+                       ) + cartesian[Z_AXIS];
   delta[Y_AXIS] = sqrt(sq(DELTA_DIAGONAL_ROD)
                        - sq(DELTA_TOWER2_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER2_Y-cartesian[Y_AXIS])
-                       ) + adjusted_z;
+                       ) + cartesian[Z_AXIS];
   delta[Z_AXIS] = sqrt(sq(DELTA_DIAGONAL_ROD)
                        - sq(DELTA_TOWER3_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER3_Y-cartesian[Y_AXIS])
-                       ) + adjusted_z;
+                       ) + cartesian[Z_AXIS];
   /*
   SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
   SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
 
-  SERIAL_ECHOPGM("grid_x="); SERIAL_ECHO(grid_x);
-  SERIAL_ECHOPGM(" grid_y="); SERIAL_ECHO(grid_y);
-  SERIAL_ECHOPGM(" bed_level="); SERIAL_ECHO(bed_level[grid_x][grid_y]);
-  SERIAL_ECHOPGM(" adjusted_z="); SERIAL_ECHOLN(adjusted_z);
-
   SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
   SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
   */
+}
+
+void adjust_delta(float cartesian[3])
+{
+  int grid_x = max(0, min(7, int(cartesian[X_AXIS]/25.0 + 3.5)));
+  int grid_y = max(0, min(7, int(cartesian[Y_AXIS]/25.0 + 3.5)));
+  float offset = bed_level[grid_x][grid_y];
+
+  delta[X_AXIS] += offset;
+  delta[Y_AXIS] += offset;
+  delta[Z_AXIS] += offset;
+
+  /*
+  SERIAL_ECHOPGM("grid_x="); SERIAL_ECHO(grid_x);
+  SERIAL_ECHOPGM(" grid_y="); SERIAL_ECHO(grid_y);
+  SERIAL_ECHOPGM(" offset="); SERIAL_ECHOLN(offset);
+  */
+}
+
+void prepare_move_raw()
+{
+  previous_millis_cmd = millis();
+  calculate_delta(destination);
+  plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+                   destination[E_AXIS], feedrate*feedmultiply/60/100.0,
+                   active_extruder);
+  for(int8_t i=0; i < NUM_AXIS; i++) {
+    current_position[i] = destination[i];
+  }
 }
 
 void prepare_move()
@@ -1856,6 +1871,7 @@ void prepare_move()
       destination[i] = current_position[i] + difference[i] * fraction;
     }
     calculate_delta(destination);
+    adjust_delta(destination);
     plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
                      destination[E_AXIS], feedrate*feedmultiply/60/100.0,
                      active_extruder);
