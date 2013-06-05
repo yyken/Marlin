@@ -172,7 +172,15 @@ const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 static float delta[3] = {0.0, 0.0, 0.0};
 static float offset[3] = {0.0, 0.0, 0.0};
-static float bed_level[7][7];
+static float bed_level[7][7] = {
+  {0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0},
+};
 static bool home_all_axis = true;
 static float feedrate = 1500.0, next_feedrate, saved_feedrate;
 static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
@@ -1791,22 +1799,30 @@ void clamp_to_software_endstops(float target[3])
 
 void calculate_delta(float cartesian[3])
 {
+  int grid_x = max(0, min(7, int(cartesian[X_AXIS]/25.0 + 3.5)));
+  int grid_y = max(0, min(7, int(cartesian[Y_AXIS]/25.0 + 3.5)));
+  float adjusted_z = cartesian[Z_AXIS] + bed_level[grid_x][grid_y];
   delta[X_AXIS] = sqrt(sq(DELTA_DIAGONAL_ROD)
                        - sq(DELTA_TOWER1_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER1_Y-cartesian[Y_AXIS])
-                       ) + cartesian[Z_AXIS];
+                       ) + adjusted_z;
   delta[Y_AXIS] = sqrt(sq(DELTA_DIAGONAL_ROD)
                        - sq(DELTA_TOWER2_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER2_Y-cartesian[Y_AXIS])
-                       ) + cartesian[Z_AXIS];
+                       ) + adjusted_z;
   delta[Z_AXIS] = sqrt(sq(DELTA_DIAGONAL_ROD)
                        - sq(DELTA_TOWER3_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER3_Y-cartesian[Y_AXIS])
-                       ) + cartesian[Z_AXIS];
+                       ) + adjusted_z;
   /*
   SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
   SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
+
+  SERIAL_ECHOPGM("grid_x="); SERIAL_ECHO(grid_x);
+  SERIAL_ECHOPGM(" grid_y="); SERIAL_ECHO(grid_y);
+  SERIAL_ECHOPGM(" bed_level="); SERIAL_ECHO(bed_level[grid_x][grid_y]);
+  SERIAL_ECHOPGM(" adjusted_z="); SERIAL_ECHOLN(adjusted_z);
 
   SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
