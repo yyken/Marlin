@@ -719,14 +719,14 @@ float z_probe() {
   return mm;
 }
 
-void calibrate_print_surface() {
+void calibrate_print_surface(float z_offset) {
   for (int y = 3; y >= -3; y--) {
-    int dir = y % 2 ? 1 : -1;
+    int dir = y % 2 ? -1 : 1;
     for (int x = -3*dir; x != 4*dir; x += dir) {
       if (x*x + y*y < 11) {
-	destination[X_AXIS] = 25 * x - z_probe_offset[X_AXIS];
-	destination[Y_AXIS] = 25 * y - z_probe_offset[Y_AXIS];
-	bed_level[x+3][y+3] = z_probe() - z_probe_offset[Z_AXIS];
+	destination[X_AXIS] = 25 * x + z_probe_offset[X_AXIS];
+	destination[Y_AXIS] = 25 * y + z_probe_offset[Y_AXIS];
+	bed_level[x+3][y+3] = z_probe() + z_offset;
       } else {
         bed_level[x+3][y+3] = 0.0;
       }
@@ -900,7 +900,8 @@ void process_commands()
       feedmultiply = 100;
 
       deploy_z_probe();
-      calibrate_print_surface();
+      calibrate_print_surface(z_probe_offset[Z_AXIS] +
+        (code_seen(axis_codes[Z_AXIS]) ? code_value() : 0.0));
       retract_z_probe();
 
       feedrate = saved_feedrate;
