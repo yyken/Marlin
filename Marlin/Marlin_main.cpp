@@ -672,33 +672,33 @@ void retract_z_probe() {
   feedrate = 400*60;
   destination[X_AXIS] = -40;
   destination[Y_AXIS] = -82;
-  destination[Z_AXIS] = 10;
   prepare_move_raw();
 
+  // Move the nozzle below the print surface to push the probe up.
   feedrate = 20*60;
-  destination[Z_AXIS] = -5;
+  destination[Z_AXIS] = current_position[Z_AXIS] - 14;
   prepare_move_raw();
 
   feedrate = 400*60;
-  destination[Z_AXIS] = 10;
+  destination[Z_AXIS] = current_position[Z_AXIS] + 30;
   prepare_move_raw();
   // Try again because sometimes the last move doesn't flush properly.
-  destination[Z_AXIS] = 10.1;
+  destination[Z_AXIS] = current_position[Z_AXIS] + 0.1;
   prepare_move_raw();
   st_synchronize();
 }
 
 float z_probe() {
   feedrate = 400*60;
-  destination[Z_AXIS] = 10;
   prepare_move_raw();
   st_synchronize();
 
   enable_endstops(true);
+  float start_z = current_position[Z_AXIS];
   long start_steps = st_get_position(Z_AXIS);
 
   feedrate = 50*60;
-  destination[Z_AXIS] = 0;
+  destination[Z_AXIS] = -20;
   prepare_move_raw();
   st_synchronize();
   endstops_hit_on_purpose();
@@ -706,15 +706,15 @@ float z_probe() {
   enable_endstops(false);
   long stop_steps = st_get_position(Z_AXIS);
 
-  float mm = 10.0 - float(start_steps - stop_steps)
-    / axis_steps_per_unit[Z_AXIS];
+  float mm = start_z -
+    float(start_steps - stop_steps) / axis_steps_per_unit[Z_AXIS];
   current_position[Z_AXIS] = mm;
   calculate_delta(current_position);
   plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
 		    current_position[E_AXIS]);
 
   feedrate = 400*60;
-  destination[Z_AXIS] = 10;
+  destination[Z_AXIS] = mm+2;
   prepare_move_raw();
   return mm;
 }
@@ -731,6 +731,16 @@ void calibrate_print_surface(float z_offset) {
         bed_level[x+3][y+3] = 0.0;
       }
     }
+    // For unprobed positions just copy nearest neighbor.
+    if (abs(y) >= 3) {
+      bed_level[1][y+3] = bed_level[2][y+3];
+      bed_level[5][y+3] = bed_level[4][y+3];
+    }
+    if (abs(y) >=2) {
+      bed_level[0][y+3] = bed_level[1][y+3];
+      bed_level[6][y+3] = bed_level[5][y+3];
+    }
+    // Print calibration results for manual frame adjustment.
     for (int x = -3; x <= 3; x++) {
       SERIAL_PROTOCOL_F(bed_level[x+3][y+3], 3);
       SERIAL_PROTOCOLPGM(" ");
@@ -1817,11 +1827,22 @@ void calculate_delta(float cartesian[3])
   */
 }
 
+// Adjust print surface height by linear interpolation over the bed_level array.
 void adjust_delta(float cartesian[3])
 {
-  int grid_x = max(0, min(7, int(cartesian[X_AXIS]/25.0 + 3.5)));
-  int grid_y = max(0, min(7, int(cartesian[Y_AXIS]/25.0 + 3.5)));
-  float offset = bed_level[grid_x][grid_y];
+  float grid_x = max(-2.999, min(2.999, cartesian[X_AXIS]/25.0));
+  float grid_y = max(-2.999, min(2.999, cartesian[Y_AXIS]/25.0));
+  int floor_x = floor(grid_x);
+  int floor_y = floor(grid_y);
+  float ratio_x = grid_x - floor_x;
+  float ratio_y = grid_y - floor_y;
+  float z1 = bed_level[floor_x+3][floor_y+3];
+  float z2 = bed_level[floor_x+3][floor_y+4];
+  float z3 = bed_level[floor_x+4][floor_y+3];
+  float z4 = bed_level[floor_x+4][floor_y+4];
+  float left = (1-ratio_y)*z1 + ratio_y*z2;
+  float right = (1-ratio_y)*z3 + ratio_y*z4;
+  float offset = (1-ratio_x)*left + ratio_x*right;
 
   delta[X_AXIS] += offset;
   delta[Y_AXIS] += offset;
@@ -1830,6 +1851,16 @@ void adjust_delta(float cartesian[3])
   /*
   SERIAL_ECHOPGM("grid_x="); SERIAL_ECHO(grid_x);
   SERIAL_ECHOPGM(" grid_y="); SERIAL_ECHO(grid_y);
+  SERIAL_ECHOPGM(" floor_x="); SERIAL_ECHO(floor_x);
+  SERIAL_ECHOPGM(" floor_y="); SERIAL_ECHO(floor_y);
+  SERIAL_ECHOPGM(" ratio_x="); SERIAL_ECHO(ratio_x);
+  SERIAL_ECHOPGM(" ratio_y="); SERIAL_ECHO(ratio_y);
+  SERIAL_ECHOPGM(" z1="); SERIAL_ECHO(z1);
+  SERIAL_ECHOPGM(" z2="); SERIAL_ECHO(z2);
+  SERIAL_ECHOPGM(" z3="); SERIAL_ECHO(z3);
+  SERIAL_ECHOPGM(" z4="); SERIAL_ECHO(z4);
+  SERIAL_ECHOPGM(" left="); SERIAL_ECHO(left);
+  SERIAL_ECHOPGM(" right="); SERIAL_ECHO(right);
   SERIAL_ECHOPGM(" offset="); SERIAL_ECHOLN(offset);
   */
 }
