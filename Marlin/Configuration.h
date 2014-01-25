@@ -83,10 +83,10 @@
 #define DELTA_SEGMENTS_PER_SECOND 200
 
 // Center-to-center distance of the holes in the diagonal push rods.
-#define DELTA_DIAGONAL_ROD 215.0 // mm
+#define DELTA_DIAGONAL_ROD 186.0 // mm
 
 // Horizontal offset from middle of printer to smooth rod center.
-#define DELTA_SMOOTH_ROD_OFFSET 137.0 // mm
+#define DELTA_SMOOTH_ROD_OFFSET 126.5 // mm
 
 // Horizontal offset of the universal joints on the end effector.
 #define DELTA_EFFECTOR_OFFSET 19.9 // mm
@@ -98,14 +98,19 @@
 #define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-DELTA_EFFECTOR_OFFSET-DELTA_CARRIAGE_OFFSET)
 
 // Effective X/Y positions of the three vertical towers.
+// If your prints are mirrored left-to-right, swap X and Z stepper motor connectors
+// (don't forget to turn off power first) or swap DELTA_TOWER1 and DELTA_TOWER3 below.
 #define SIN_60 0.8660254037844386
 #define COS_60 0.5
-#define DELTA_TOWER1_X -SIN_60*DELTA_RADIUS // front left tower
+// Front right tower (positive X direction), connect to X stepper driver.
+#define DELTA_TOWER1_X SIN_60*DELTA_RADIUS
 #define DELTA_TOWER1_Y -COS_60*DELTA_RADIUS
-#define DELTA_TOWER2_X SIN_60*DELTA_RADIUS // front right tower
-#define DELTA_TOWER2_Y -COS_60*DELTA_RADIUS
-#define DELTA_TOWER3_X 0.0 // back middle tower
-#define DELTA_TOWER3_Y DELTA_RADIUS
+// Back middle tower (positive Y direction), connect to Y stepper driver.
+#define DELTA_TOWER2_X 0.0
+#define DELTA_TOWER2_Y DELTA_RADIUS
+// Front left tower (negative X direction), connect to Z stepper driver.
+#define DELTA_TOWER3_X -SIN_60*DELTA_RADIUS
+#define DELTA_TOWER3_Y -COS_60*DELTA_RADIUS
 
 // Diagonal rod squared
 #define DELTA_DIAGONAL_ROD_2 pow(DELTA_DIAGONAL_ROD,2)
@@ -345,17 +350,16 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define MANUAL_Y_HOME_POS 0
 #define MANUAL_Z_HOME_POS 205  // For delta: Distance between nozzle and print surface after homing.
 
-#define AUTOLEVEL_GRID 24  // Distance between autolevel Z probing points, should be less than print surface radius/3.
-
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #define HOMING_FEEDRATE {200*60, 200*60, 200*60, 0}  // set the homing speeds (mm/min)
 
-#define Z_PROBE_OFFSET {0, 19, -8, 0}  // X, Y, Z, E distance between hotend nozzle and deployed bed leveling probe.
+#define Z_PROBE_OFFSET {0, 17, -7.5}  // X, Y, Z distance between hotend nozzle and deployed bed leveling probe.
+#define Z_PROBE_GRID 22  // Distance between autolevel Z probing points, something like print surface radius/4.
 
 // default settings
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100, 100, 100, 100}
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {100, 100, 100, 115}
 #define DEFAULT_MAX_FEEDRATE          {200, 200, 200, 200}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {9000,9000,9000,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
@@ -400,7 +404,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //LCD and SD support
 //#define ULTRA_LCD  //general lcd support, also 16x2
 //#define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
-#define SDSUPPORT // Enable SD Card Support in Hardware Console
+//#define SDSUPPORT // Enable SD Card Support in Hardware Console
 //#define SDSLOW // Use slower SD transfer mode (not normally needed - uncomment if you're getting volume init error)
 
 //#define ULTIMAKERCONTROLLER //as available from the ultimaker online store.
