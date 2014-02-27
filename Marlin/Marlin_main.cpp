@@ -887,32 +887,34 @@ static void run_z_probe() {
     plan_bed_level_matrix.set_to_identity();
 
 #ifdef DELTA
-    enable_endstops(true);
-    float start_z = current_position[Z_AXIS];
-    long start_steps = st_get_position(Z_AXIS);
-    feedrate = homing_feedrate[Z_AXIS]/4;
   #ifdef FSR_BED_LEVELING
-    float step = 0.1;
+    feedrate = 120; //mm/min
+    float step = 0.05;
     int direction = -1;
-    while (degBed() < 100 && destination[Z_AXIS] > -5) {
+    while (degBed() < 50) {
       destination[Z_AXIS] += step * direction;
       prepare_move_raw();
       st_synchronize();
     }
-    for (int count=0; count<20; count++) {
-      feedrate *= 0.7;
-      step *= 0.7;
-      direction = degBed() < 100 ? -1 : 1;
+    while (step > 0.01) {
+      step *= 0.95;
+      feedrate *= 0.95;
+      direction = degBed() < 50 ? -1 : 1;
       destination[Z_AXIS] += step * direction;
       prepare_move_raw();
       st_synchronize();
     }
   #else
+    enable_endstops(true);
+    float start_z = current_position[Z_AXIS];
+    long start_steps = st_get_position(Z_AXIS);
+
+    feedrate = homing_feedrate[Z_AXIS]/4;
     destination[Z_AXIS] = -10;
     prepare_move_raw();
     st_synchronize();
     endstops_hit_on_purpose();
-  #endif
+
     enable_endstops(false);
     long stop_steps = st_get_position(Z_AXIS);
 
@@ -920,6 +922,7 @@ static void run_z_probe() {
     current_position[Z_AXIS] = mm;
     calculate_delta(current_position);
     plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
+  #endif
 #else
     feedrate = homing_feedrate[Z_AXIS];
 
@@ -1612,7 +1615,7 @@ void process_commands()
                 #ifdef DELTA
                 // Avoid probing the corners (outside the round or hexagon print surface) on a delta printer.
                 float distance_from_center = sqrt(xProbe*xProbe + yProbe*yProbe);
-                if (distance_from_center > DELTA_PRINTABLE_RADIUS) continue;
+                if (distance_from_center > DELTA_PROBABLE_RADIUS - 1) continue;
                 #endif //DELTA
 
                 float z_before = probePointCounter == 0 ? Z_RAISE_BEFORE_PROBING :
