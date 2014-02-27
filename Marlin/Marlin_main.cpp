@@ -892,17 +892,22 @@ static void run_z_probe() {
 
 #ifdef DELTA
   #ifdef FSR_BED_LEVELING
-    feedrate = 300; //mm/min
+    feedrate = 600; //mm/min
     float step = 0.05;
     int direction = -1;
+    while (touching_print_surface()) {
+      destination[Z_AXIS] -= step * direction;
+      prepare_move_raw();
+      st_synchronize();
+    }
     while (!touching_print_surface()) {
       destination[Z_AXIS] += step * direction;
       prepare_move_raw();
       st_synchronize();
     }
-    while (step > 0.01) {
-      step *= 0.95;
-      feedrate *= 0.95;
+    while (step > 0.005) {
+      step *= 0.8;
+      feedrate *= 0.8;
       direction = touching_print_surface() ? 1 : -1;
       destination[Z_AXIS] += step * direction;
       prepare_move_raw();
