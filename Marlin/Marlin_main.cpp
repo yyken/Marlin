@@ -884,7 +884,7 @@ static void set_bed_level_equation(float z_at_xLeft_yFront, float z_at_xRight_yF
 #endif // ACCURATE_BED_LEVELING
 
 bool touching_print_surface() {
-  return rawBedSample() < 512; // ADC goes from 0 to 1023
+  return rawBedSample() < 800; // ADC goes from 0 to 1023
 }
 
 static void run_z_probe() {
