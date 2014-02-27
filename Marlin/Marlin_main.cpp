@@ -1628,7 +1628,7 @@ void process_commands()
                 #ifdef DELTA
                 // Avoid probing the corners (outside the round or hexagon print surface) on a delta printer.
                 float distance_from_center = sqrt(xProbe*xProbe + yProbe*yProbe);
-                if (distance_from_center > DELTA_PROBABLE_RADIUS - 1) continue;
+                if (distance_from_center > DELTA_PROBABLE_RADIUS) continue;
                 #endif //DELTA
 
                 float z_before = probePointCounter == 0 ? Z_RAISE_BEFORE_PROBING :
@@ -1691,7 +1691,7 @@ void process_commands()
 
 
 #endif // ACCURATE_BED_LEVELING
-            do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], Z_RAISE_AFTER_PROBING);
+            do_blocking_move_to(MANUAL_X_HOME_POS, MANUAL_Y_HOME_POS, Z_RAISE_AFTER_PROBING);
             st_synchronize();
 
           #ifndef SERVO_ENDSTOPS
