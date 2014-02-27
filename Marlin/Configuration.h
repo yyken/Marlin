@@ -379,10 +379,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
   // these are the positions on the bed to do the probing
   #define DELTA_PROBABLE_RADIUS (DELTA_PRINTABLE_RADIUS-10)
-  #define LEFT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
-  #define RIGHT_PROBE_BED_POSITION DELTA_PROBABLE_RADIUS
-  #define BACK_PROBE_BED_POSITION DELTA_PROBABLE_RADIUS
-  #define FRONT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
+  #define LEFT_PROBE_BED_POSITION -DELTA_PRINTABLE_RADIUS
+  #define RIGHT_PROBE_BED_POSITION DELTA_PRINTABLE_RADIUS
+  #define BACK_PROBE_BED_POSITION DELTA_PRINTABLE_RADIUS
+  #define FRONT_PROBE_BED_POSITION -DELTA_PRINTABLE_RADIUS
 
   // these are the offsets to the probe relative to the extruder tip (Hotend - Probe)
   #define X_PROBE_OFFSET_FROM_EXTRUDER 0.0
@@ -395,7 +395,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   #define XY_TRAVEL_SPEED 8000         // X and Y axis travel speed between probes, in mm/min
 
   #define Z_RAISE_BEFORE_PROBING 5  //How much the extruder will be raised before traveling to the first probing point.
-  #define Z_RAISE_BETWEEN_PROBINGS 2  //How much the extruder will be raised when traveling from between next probing points
+  #define Z_RAISE_BETWEEN_PROBINGS 1  //How much the extruder will be raised when traveling from between next probing points
+  #define Z_RAISE_AFTER_PROBING 50  //How much the extruder will be raised after the last probing point.
 
 
   //If defined, the Probe servo will be turned on only during movement and then turned off to avoid jerk
@@ -427,7 +428,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   #define ACCURATE_BED_LEVELING
 
   #ifdef ACCURATE_BED_LEVELING
-    #define ACCURATE_BED_LEVELING_POINTS 7
+    #define ACCURATE_BED_LEVELING_POINTS 9
     #define ACCURATE_BED_LEVELING_GRID_X ((RIGHT_PROBE_BED_POSITION - LEFT_PROBE_BED_POSITION) / (ACCURATE_BED_LEVELING_POINTS - 1))
     #define ACCURATE_BED_LEVELING_GRID_Y ((BACK_PROBE_BED_POSITION - FRONT_PROBE_BED_POSITION) / (ACCURATE_BED_LEVELING_POINTS - 1))
 

@@ -892,7 +892,7 @@ static void run_z_probe() {
 
 #ifdef DELTA
   #ifdef FSR_BED_LEVELING
-    feedrate = 120; //mm/min
+    feedrate = 300; //mm/min
     float step = 0.05;
     int direction = -1;
     while (!touching_print_surface()) {
@@ -1686,6 +1686,7 @@ void process_commands()
 
 
 #endif // ACCURATE_BED_LEVELING
+            do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], Z_RAISE_AFTER_PROBING);
             st_synchronize();
 
           #ifndef SERVO_ENDSTOPS
