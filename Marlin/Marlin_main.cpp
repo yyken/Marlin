@@ -890,13 +890,29 @@ static void run_z_probe() {
     enable_endstops(true);
     float start_z = current_position[Z_AXIS];
     long start_steps = st_get_position(Z_AXIS);
-
     feedrate = homing_feedrate[Z_AXIS]/4;
+  #ifdef FSR_BED_LEVELING
+    float step = 0.1;
+    int direction = -1;
+    while (degBed() < 100 && destination[Z_AXIS] > -5) {
+      destination[Z_AXIS] += step * direction;
+      prepare_move_raw();
+      st_synchronize();
+    }
+    for (int count=0; count<20; count++) {
+      feedrate *= 0.7;
+      step *= 0.7;
+      direction = degBed() < 100 ? -1 : 1;
+      destination[Z_AXIS] += step * direction;
+      prepare_move_raw();
+      st_synchronize();
+    }
+  #else
     destination[Z_AXIS] = -10;
     prepare_move_raw();
     st_synchronize();
     endstops_hit_on_purpose();
-
+  #endif
     enable_endstops(false);
     long stop_steps = st_get_position(Z_AXIS);
 
