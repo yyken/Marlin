@@ -883,6 +883,10 @@ static void set_bed_level_equation(float z_at_xLeft_yFront, float z_at_xRight_yF
 }
 #endif // ACCURATE_BED_LEVELING
 
+bool touching_print_surface() {
+  return rawBedSample() < 512; // ADC goes from 0 to 1023
+}
+
 static void run_z_probe() {
     plan_bed_level_matrix.set_to_identity();
 
@@ -891,7 +895,7 @@ static void run_z_probe() {
     feedrate = 120; //mm/min
     float step = 0.05;
     int direction = -1;
-    while (degBed() < 50) {
+    while (!touching_print_surface()) {
       destination[Z_AXIS] += step * direction;
       prepare_move_raw();
       st_synchronize();
@@ -899,7 +903,7 @@ static void run_z_probe() {
     while (step > 0.01) {
       step *= 0.95;
       feedrate *= 0.95;
-      direction = degBed() < 50 ? -1 : 1;
+      direction = touching_print_surface() ? 1 : -1;
       destination[Z_AXIS] += step * direction;
       prepare_move_raw();
       st_synchronize();
@@ -1097,6 +1101,10 @@ static float probe_pt(float x, float y, float z_before) {
   SERIAL_PROTOCOL(y);
   SERIAL_PROTOCOLPGM(" z: ");
   SERIAL_PROTOCOL(measured_z);
+#ifdef FSR_BED_LEVELING
+  SERIAL_PROTOCOLPGM(" FSR: ");
+  SERIAL_PROTOCOL(rawBedSample());
+#endif
   SERIAL_PROTOCOLPGM("\n");
   return measured_z;
 }
