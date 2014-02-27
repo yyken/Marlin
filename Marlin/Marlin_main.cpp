@@ -981,6 +981,10 @@ static void clean_up_after_endstop_move() {
 
 static void engage_z_probe() {
     // Engage Z Servo endstop if enabled
+    #ifdef FSR_BED_LEVELING
+    return;
+    #endif
+
     #ifdef SERVO_ENDSTOPS
     if (servo_endstops[Z_AXIS] > -1) {
 #if defined (ENABLE_AUTO_BED_LEVELING) && (PROBE_SERVO_DEACTIVATION_DELAY > 0)
@@ -1008,6 +1012,10 @@ static void engage_z_probe() {
 
 static void retract_z_probe() {
     // Retract Z Servo endstop if enabled
+    #ifdef FSR_BED_LEVELING
+    return;
+    #endif
+
     #ifdef SERVO_ENDSTOPS
     if (servo_endstops[Z_AXIS] > -1) {
 #if defined (ENABLE_AUTO_BED_LEVELING) && (PROBE_SERVO_DEACTIVATION_DELAY > 0)
@@ -1542,7 +1550,7 @@ void process_commands()
 
           #ifndef SERVO_ENDSTOPS
             engage_z_probe();   // Engage Z probe by moving the end effector.
-          #endif
+          #endif //SERVO_ENDSTOPS
 
             setup_for_endstop_move();
 
