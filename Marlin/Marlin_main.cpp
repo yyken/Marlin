@@ -1632,6 +1632,10 @@ void process_commands()
                 eqnAMatrix[probePointCounter + 1*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = yProbe;
                 eqnAMatrix[probePointCounter + 2*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = 1;
                 probePointCounter++;
+
+                manage_heater();
+                manage_inactivity();
+                lcd_update();
               }
             }
             clean_up_after_endstop_move();
