@@ -883,42 +883,15 @@ static void set_bed_level_equation(float z_at_xLeft_yFront, float z_at_xRight_yF
 }
 #endif // ACCURATE_BED_LEVELING
 
-bool touching_print_surface() {
-  return rawBedSample() < 800; // ADC goes from 0 to 1023
-}
-
 static void run_z_probe() {
     plan_bed_level_matrix.set_to_identity();
 
 #ifdef DELTA
-  #ifdef FSR_BED_LEVELING
-    feedrate = 600; //mm/min
-    float step = 0.05;
-    int direction = -1;
-    while (touching_print_surface()) {
-      destination[Z_AXIS] -= step * direction;
-      prepare_move_raw();
-      st_synchronize();
-    }
-    while (!touching_print_surface()) {
-      destination[Z_AXIS] += step * direction;
-      prepare_move_raw();
-      st_synchronize();
-    }
-    while (step > 0.005) {
-      step *= 0.8;
-      feedrate *= 0.8;
-      direction = touching_print_surface() ? 1 : -1;
-      destination[Z_AXIS] += step * direction;
-      prepare_move_raw();
-      st_synchronize();
-    }
-  #else
     enable_endstops(true);
     float start_z = current_position[Z_AXIS];
     long start_steps = st_get_position(Z_AXIS);
 
-    feedrate = homing_feedrate[Z_AXIS]/4;
+    feedrate = homing_feedrate[Z_AXIS]/20;
     destination[Z_AXIS] = -10;
     prepare_move_raw();
     st_synchronize();
@@ -931,7 +904,6 @@ static void run_z_probe() {
     current_position[Z_AXIS] = mm;
     calculate_delta(current_position);
     plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
-  #endif
 #else
     feedrate = homing_feedrate[Z_AXIS];
 
