@@ -909,7 +909,7 @@ static void run_z_probe() {
 
     // move down until you find the bed
     float zPosition = -10;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/20, active_extruder);
     st_synchronize();
 
         // we have to let the planner know where we are right now as it is not where we said to go.
@@ -918,13 +918,13 @@ static void run_z_probe() {
 
     // move up the retract distance
     zPosition += home_retract_mm(Z_AXIS);
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/20, active_extruder);
     st_synchronize();
 
     // move back down slowly to find bed
     feedrate = homing_feedrate[Z_AXIS]/4;
     zPosition -= home_retract_mm(Z_AXIS) * 2;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/20, active_extruder);
     st_synchronize();
 
     current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
@@ -947,7 +947,7 @@ static void do_blocking_move_to(float x, float y, float z) {
     current_position[X_AXIS] = x;
     current_position[Y_AXIS] = y;
     current_position[Z_AXIS] = z;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/20, active_extruder);
 #endif //DELTA
     st_synchronize();
 
@@ -981,6 +981,12 @@ static void clean_up_after_endstop_move() {
 
 static void engage_z_probe() {
     // Engage Z Servo endstop if enabled
+    
+    #ifdef NORMAL_BED_LEVELING
+    return;
+    #endif
+    
+    
     #ifdef SERVO_ENDSTOPS
     if (servo_endstops[Z_AXIS] > -1) {
 #if defined (ENABLE_AUTO_BED_LEVELING) && (PROBE_SERVO_DEACTIVATION_DELAY > 0)
@@ -994,13 +1000,14 @@ static void engage_z_probe() {
     }
     #else // Deploy the Z probe by touching the belt, no servo needed.
     feedrate = homing_feedrate[X_AXIS];
-    destination[X_AXIS] = 35;
-    destination[Y_AXIS] = 72;
-    destination[Z_AXIS] = 100;
+    destination[X_AXIS] =  0 ;
+    destination[Y_AXIS] =  0 ;
+    destination[Z_AXIS] = 60 ;
     prepare_move_raw();
 
     feedrate = homing_feedrate[X_AXIS]/10;
-    destination[X_AXIS] = 0;
+    destination[X_AXIS] = 0 ;
+    destination[Y_AXIS] = 0 ;
     prepare_move_raw();
     st_synchronize();
     #endif //SERVO_ENDSTOPS
@@ -1008,6 +1015,14 @@ static void engage_z_probe() {
 
 static void retract_z_probe() {
     // Retract Z Servo endstop if enabled
+    #ifdef NORMAL_BED_LEVELING
+    return;
+    #endif
+    
+    
+    
+    
+    
     #ifdef SERVO_ENDSTOPS
     if (servo_endstops[Z_AXIS] > -1) {
 #if defined (ENABLE_AUTO_BED_LEVELING) && (PROBE_SERVO_DEACTIVATION_DELAY > 0)
@@ -1021,12 +1036,12 @@ static void retract_z_probe() {
     }
     #else // Push up the Z probe by moving the end effector, no servo needed.
     feedrate = homing_feedrate[X_AXIS];
-    destination[Z_AXIS] = current_position[Z_AXIS] + 20;
+    destination[Z_AXIS] = current_position[Z_AXIS] + 3;
     prepare_move_raw();
 
-    destination[X_AXIS] = -46;
-    destination[Y_AXIS] = 59;
-    destination[Z_AXIS] = 28;
+    destination[X_AXIS] = 0;
+    destination[Y_AXIS] = 0;
+    destination[Z_AXIS] = 150;
     prepare_move_raw();
 
     // TODO: Move the nozzle down until the Z probe switch is activated.
@@ -1036,11 +1051,11 @@ static void retract_z_probe() {
 
     // Move the nozzle down further to push the probe into retracted position.
     feedrate = homing_feedrate[Z_AXIS]/10;
-    destination[Z_AXIS] = current_position[Z_AXIS] - 20;
+    destination[Z_AXIS] = current_position[Z_AXIS] - 0;
     prepare_move_raw();
 
     feedrate = homing_feedrate[Z_AXIS];
-    destination[Z_AXIS] = current_position[Z_AXIS] + 30;
+    destination[Z_AXIS] = current_position[Z_AXIS] + 0;
     prepare_move_raw();
     st_synchronize();
     #endif //SERVO_ENDSTOPS
@@ -1056,10 +1071,10 @@ static float probe_pt(float x, float y, float z_before) {
   engage_z_probe();   // Engage Z Servo endstop if available
 #endif //SERVO_ENDSTOPS
 
-  run_z_probe();
-  float measured_z = current_position[Z_AXIS];
+    run_z_probe();
+    float measured_z = current_position[Z_AXIS];
 
-#ifdef SERVO_ENDSTOPS
+ #ifdef SERVO_ENDSTOPS
   retract_z_probe();
 #endif //SERVO_ENDSTOPS
 
@@ -1166,14 +1181,14 @@ static void homeaxis(int axis) {
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
     st_synchronize();
 
     enable_endstops(false);  // Ignore Z probe while moving away from the top microswitch.
     current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = -home_retract_mm(axis) * axis_home_dir;
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
     st_synchronize();
     enable_endstops(true);  // Stop ignoring Z probe while moving up to the top microswitch again.
 
@@ -1183,14 +1198,14 @@ static void homeaxis(int axis) {
 #else
     feedrate = homing_feedrate[axis]/2 ;
 #endif
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
     st_synchronize();
 #ifdef DELTA
     // retrace by the amount specified in endstop_adj
     if (endstop_adj[axis] * axis_home_dir < 0) {
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
       destination[axis] = endstop_adj[axis];
-      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
       st_synchronize();
     }
 #endif
@@ -1337,7 +1352,7 @@ void process_commands()
           destination[Y_AXIS] = 3 * Z_MAX_LENGTH;
           destination[Z_AXIS] = 3 * Z_MAX_LENGTH;
           feedrate = 1.732 * homing_feedrate[X_AXIS];
-          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
           st_synchronize();
           endstops_hit_on_purpose();
 
@@ -1380,7 +1395,7 @@ void process_commands()
         feedrate = homing_feedrate[X_AXIS];
         if(homing_feedrate[Y_AXIS]<feedrate)
           feedrate =homing_feedrate[Y_AXIS];
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
         st_synchronize();
 
         axis_is_at_home(X_AXIS);
@@ -1388,7 +1403,7 @@ void process_commands()
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
         destination[X_AXIS] = current_position[X_AXIS];
         destination[Y_AXIS] = current_position[Y_AXIS];
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
         feedrate = 0.0;
         st_synchronize();
         endstops_hit_on_purpose();
@@ -2813,7 +2828,7 @@ void process_commands()
             target[E_AXIS]+= FILAMENTCHANGE_FIRSTRETRACT ;
           #endif
         }
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder);
 
         //lift Z
         if(code_seen('Z'))
@@ -2826,7 +2841,7 @@ void process_commands()
             target[Z_AXIS]+= FILAMENTCHANGE_ZADD ;
           #endif
         }
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder);
 
         //move xy
         if(code_seen('X'))
@@ -2850,7 +2865,7 @@ void process_commands()
           #endif
         }
 
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder);
 
         if(code_seen('L'))
         {
@@ -2863,7 +2878,7 @@ void process_commands()
           #endif
         }
 
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder);
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder);
 
         //finish moves
         st_synchronize();
@@ -2911,10 +2926,10 @@ void process_commands()
         }
         current_position[E_AXIS]=target[E_AXIS]; //the long retract of L is compensated by manual filament feeding
         plan_set_e_position(current_position[E_AXIS]);
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //should do nothing
-        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move xy back
-        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move z back
-        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/60, active_extruder); //final untretract
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder); //should do nothing
+        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder); //move xy back
+        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/20, active_extruder); //move z back
+        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], feedrate/20, active_extruder); //final untretract
     }
     break;
     #endif //FILAMENTCHANGEENABLE
@@ -3411,7 +3426,7 @@ void prepare_move()
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
-      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/20, active_extruder);
   }
   else {
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0, active_extruder);
